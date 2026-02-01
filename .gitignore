@@ -1,0 +1,21 @@
+# ROS 2 / colcon
+build/
+install/
+log/
+
+# Python
+__pycache__/
+*.pyc
+
+# Editors/OS
+.vscode/
+.DS_Store
+
+# Extra logs
+Log/
+
+# Common build artifacts accidentally inside src/
+**/build/
+**/install/
+**/log/
+**/.cache/
