@@ -1,21 +1,128 @@
-# ROS 2 / colcon
+cd ~/agilex_ws
+
+cat > .gitignore << 'EOF'
+###############################################################################
+# ROS 2 / colcon workspace (teacher-friendly)
+###############################################################################
 build/
 install/
 log/
-
-# Python
-__pycache__/
-*.pyc
-
-# Editors/OS
-.vscode/
-.DS_Store
-
-# Extra logs
 Log/
 
-# Common build artifacts accidentally inside src/
+# In case someone builds inside src/ by mistake
 **/build/
 **/install/
 **/log/
-**/.cache/
+**/Log/
+
+###############################################################################
+# Python
+###############################################################################
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+###############################################################################
+# C/C++ build artifacts
+###############################################################################
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.out
+*.class
+*.pyi
+
+CMakeCache.txt
+CMakeFiles/
+cmake-build-*/
+compile_commands.json
+*.cmake.user
+*.log
+
+###############################################################################
+# ROS bags / recordings / maps / datasets
+###############################################################################
+*.bag
+*.bag.active
+*.db3
+*.mcap
+*.pcap
+*.pcapng
+
+# Maps / large binary assets that are usually generated
+*.pgm
+*.ppm
+*.bmp
+*.tif
+*.tiff
+
+###############################################################################
+# Images / video / large media (optional: keep if you need)
+###############################################################################
+*.mp4
+*.avi
+*.mov
+*.mkv
+
+###############################################################################
+# ML / vision (YOLO, etc.)
+###############################################################################
+# Training/inference outputs
+**/runs/
+**/results/
+**/output/
+**/outputs/
+**/wandb/
+**/mlruns/
+
+# Large model weights (keep OUT of git for teaching repos)
+#*.pt
+*.pth
+*.onnx
+*.engine
+*.tflite
+*.pb
+*.ckpt
+*.weights
+
+###############################################################################
+# Archives / installers
+###############################################################################
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
+*.rar
+*.deb
+*.rpm
+*.iso
+
+###############################################################################
+# Editors / OS
+###############################################################################
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+###############################################################################
+# Optional: keep third-party SDK binaries out (uncomment if you want)
+# (Your current OrbbecSDK includes .so already; keep if needed.)
+###############################################################################
+# **/SDK/lib/**
+EOF
