@@ -24,7 +24,7 @@ services:
       - CYCLONEDDS_URI=file:///config/cyclonedds_robot.xml
 
       # X11 (only if you really need GUIs from the robot container)
-      - DISPLAY=${DISPLAY}
+      - DISPLAY=:0
       - QT_X11_NO_MITSHM=1
       - LIBGL_ALWAYS_SOFTWARE=1
       - MESA_GL_VERSION_OVERRIDE=2.1
@@ -53,8 +53,8 @@ services:
       # (add more /dev/videoX if needed)
 
       # Optional: override launch files (keep ro)
-      - ./limo_base.launch.py:/root/agilex_ws/install/limo_base/share/limo_base/launch/limo_base.launch.py:ro
-      - ./limo_start.launch.py:/root/agilex_ws/install/limo_bringup/share/limo_bringup/launch/humble/limo_start.launch.py:ro
+      - ./limo_base.launch.py:/root/agilex_ws/install/limo_base/share/limo_base/launch/limo_base.launch.py #:ro
+      - ./limo_start.launch.py:/root/agilex_ws/install/limo_bringup/share/limo_bringup/launch/humble/limo_start.launch.py #:ro
 
       # Your entrypoint
       - ./limo_entrypoint.sh:/limo_entrypoint.sh:ro

@@ -92,6 +92,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-humble-rqt-common-plugins \
 && rm -rf /var/lib/apt/lists/*
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgflags-dev \
+    ros-humble-tf2-eigen \
+ && rm -rf /var/lib/apt/lists/*
+ 
 # -----------------------------
 # Environment setup (.bashrc)
 # -----------------------------
