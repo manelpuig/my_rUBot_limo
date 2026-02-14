@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CycloneDDS xmlns="https://cdds.io/config">
+  <Domain id="any">
+    <General>
+      <!-- Choose the correct interface on the robot (usually wlan0 or eth0) -->
+      <Interfaces>
+        <NetworkInterface name="wlan0"/>
+      </Interfaces>
+
+      <!-- If you rely on ROS_STATIC_PEERS + DISCOVERY_RANGE=OFF, multicast is not needed -->
+      <AllowMulticast>false</AllowMulticast>
+    </General>
+
+    <!-- Optional: increase for large messages (images/pointclouds/maps) -->
+    <Internal>
+      <MaxMessageSize>10485760</MaxMessageSize> <!-- 10 MB -->
+    </Internal>
+  </Domain>
+</CycloneDDS>
