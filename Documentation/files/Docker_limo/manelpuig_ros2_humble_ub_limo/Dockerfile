@@ -97,10 +97,12 @@ RUN set -eux; \
     ldconfig
 
 # -----------------------------
-# 5) Build ROS2 workspace
+# 5) Build ROS2 workspace (includes ydlidar_ros2_driver)
 # -----------------------------
-RUN set -eux; \
+RUN set -ex; \
+    set +u; \
     source /opt/ros/humble/setup.bash; \
+    set -u; \
     cd /root/agilex_ws; \
     rm -rf build install log; \
     colcon build --symlink-install; \
@@ -109,8 +111,8 @@ RUN set -eux; \
 # -----------------------------
 # Environment setup (.bashrc)
 # -----------------------------
-RUN echo "source /opt/ros/humble/setup.bash" >> /root/.bashrc && \
+RUN echo 'set +u; source /opt/ros/humble/setup.bash; set -u' >> /root/.bashrc && \
     echo "source /root/agilex_ws/install/setup.bash" >> /root/.bashrc && \
     echo "cd /root/agilex_ws" >> /root/.bashrc
-
+    
 CMD ["/bin/bash"]
