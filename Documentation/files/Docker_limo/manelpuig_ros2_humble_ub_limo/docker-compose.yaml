@@ -13,6 +13,7 @@ services:
     tty: true
     stdin_open: true
 
+
     environment:
       # ROS 2 / DDS
       - ROS_DOMAIN_ID=1
@@ -53,8 +54,8 @@ services:
       # (add more /dev/videoX if needed)
 
       # Optional: override launch files (keep ro)
-      - ./limo_base.launch.py:/root/agilex_ws/install/limo_base/share/limo_base/launch/limo_base.launch.py #:ro
-      - ./limo_start.launch.py:/root/agilex_ws/install/limo_bringup/share/limo_bringup/launch/humble/limo_start.launch.py #:ro
+      #- ./limo_base.launch.py:/root/agilex_ws/install/limo_base/share/limo_base/launch/limo_base.launch.py #:ro
+      #- ./limo_start.launch.py:/root/agilex_ws/install/limo_bringup/share/limo_bringup/launch/humble/limo_start.launch.py #:ro
 
       # Your entrypoint
       - ./limo_entrypoint.sh:/limo_entrypoint.sh:ro
