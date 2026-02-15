@@ -1,0 +1,62 @@
+name: limo_humble_orbbec
+
+services:
+  limo-humble-container:
+    pull_policy: always
+    image: manelpuig/ros2-humble-ub-limo:full
+    container_name: limo-humble-orbbec-container
+
+    privileged: true
+    network_mode: host
+    restart: always
+
+    tty: true
+    stdin_open: true
+
+    environment:
+      # ROS 2 / DDS
+      - ROS_DOMAIN_ID=1
+      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+
+      # Lab: robust unicast discovery (robot <-> PC)
+      - ROS_AUTOMATIC_DISCOVERY_RANGE=OFF
+      - ROS_STATIC_PEERS=192.168.1.16          # ⚠️ PC IP (canvia-la)
+      - CYCLONEDDS_URI=file:///config/cyclonedds_robot.xml
+
+      # X11 (only if you really need GUIs from the robot container)
+      - DISPLAY=:0
+      - QT_X11_NO_MITSHM=1
+      - LIBGL_ALWAYS_SOFTWARE=1
+      - MESA_GL_VERSION_OVERRIDE=2.1
+      - XDG_RUNTIME_DIR=/tmp/runtime-root
+
+    volumes:
+      # CycloneDDS XML
+      - ./config:/config:ro
+
+      # X11 socket (optional)
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+
+      # Host identity/groups (optional)
+      - /etc/passwd:/etc/passwd:ro
+      - /etc/group:/etc/group:ro
+
+      # UDEV rules (optional)
+      - /etc/udev/rules.d:/etc/udev/rules.d:ro
+
+      # USB devices (Orbbec)
+      - /dev/bus/usb:/dev/bus/usb
+
+      # If you need V4L2 (only if Orbbec exposes /dev/video*)
+      - /dev/video0:/dev/video0
+      - /dev/video1:/dev/video1
+      # (add more /dev/videoX if needed)
+
+      # Your entrypoint
+      - ./limo_entrypoint.sh:/limo_entrypoint.sh:ro
+
+    entrypoint: /limo_entrypoint.sh
+
+    command: ["sleep", "infinity"]
+    # Or:
+    # command: ["ros2", "launch", "limo_bringup", "limo_start.launch.py"]
