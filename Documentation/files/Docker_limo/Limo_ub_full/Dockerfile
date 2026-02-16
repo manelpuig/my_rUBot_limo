@@ -10,7 +10,7 @@ RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
       ca-certificates curl gnupg \
-      build-essential cmake git unzip \
+      build-essential cmake git unzip pkg-config \
       python3-pip python3-rosdep python3-colcon-common-extensions python3-serial \
       iputils-ping net-tools \
       \
@@ -18,10 +18,13 @@ RUN set -eux; \
       x11-apps libgl1-mesa-glx libgl1-mesa-dri libglu1-mesa mesa-utils \
       libqt5x11extras5 libxkbcommon-x11-0 libx11-6 libxext6 libxrender1 libxtst6 \
       \
-      # USB / udev / video
+      # USB / udev / video (important for cameras)
       libusb-1.0-0 libusb-1.0-0-dev libudev-dev udev usbutils v4l-utils \
       \
-      # ROS middleware + tools
+      # OpenCV dev (often needed by camera drivers)
+      libopencv-dev \
+      \
+      # ROS middleware + tools (your original set)
       ros-humble-rmw-cyclonedds-cpp \
       ros-humble-rviz2 \
       ros-humble-joint-state-publisher \
@@ -39,6 +42,23 @@ RUN set -eux; \
       ros-humble-diagnostic-updater \
       ros-humble-backward-ros \
       nlohmann-json3-dev \
+      \
+      # --- add-ons to fix your rosdep/apt failures ---
+      ros-humble-xacro \
+      ros-humble-joint-state-publisher-gui \
+      ros-humble-rqt-robot-steering \
+      ros-humble-vision-msgs \
+      ros-humble-image-publisher \
+      ros-humble-camera-info-manager \
+      \
+      # Nav2 + Cartographer (remove if not needed)
+      ros-humble-nav2-bringup \
+      ros-humble-cartographer \
+      ros-humble-cartographer-ros \
+      \
+      # System deps that rosdep couldn't locate
+      libgflags-dev \
+      libgoogle-glog-dev \
     ; \
     rm -rf /var/lib/apt/lists/*
 
@@ -64,6 +84,15 @@ RUN set -eux; \
     test -d /root/limo_pi/src
 
 # -----------------------------
+# 3b) Clone OrbbecSDK_ROS2 into the workspace (needed for libOrbbecSDK)
+# -----------------------------
+RUN set -eux; \
+    cd /root/limo_pi/src; \
+    if [ ! -d OrbbecSDK_ROS2 ]; then \
+      git clone --branch main https://github.com/orbbec/OrbbecSDK_ROS2.git; \
+    fi
+
+# -----------------------------
 # 4) Optional: Build & install YDLidar-SDK (if present)
 # -----------------------------
 RUN set -eux; \
@@ -81,16 +110,17 @@ RUN set -eux; \
 # -----------------------------
 # 5) rosdep install + colcon build
 # -----------------------------
-RUN set -ex; \
-    set +u; \
-    source /opt/ros/humble/setup.bash; \
-    set -u; \
+RUN set -eux; \
+    set +u; source /opt/ros/humble/setup.bash; set -u; \
     cd /root/limo_pi; \
-    rosdep install --from-paths src --ignore-src -r -y; \
+    rosdep update; \
+    rosdep install --from-paths src --ignore-src -r -y \
+      --skip-keys "libgazebo_ros gazebo rviz yolov5 cmake_modules nav2_recoveries"; \
     rm -rf build install log; \
-    colcon build --symlink-install; \
+    colcon build --symlink-install --packages-skip limo_car; \
+    ldconfig; \
     rm -rf /root/.ros/log || true
-    
+
 # -----------------------------
 # 6) Environment setup (.bashrc)
 # -----------------------------
