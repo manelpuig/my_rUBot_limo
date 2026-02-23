@@ -1,9 +1,19 @@
 # LIMO ROS 2 Humble -- Robot + PC Communication Guide
 
-## 1️⃣ On the Robot (ARM) -- Run Docker Compose
+## On the Robot (ARM) -- Run Docker Compose
+
+Connect first to the raspberrypi:
+```bash
+ssh-keygen -R 192.168.1.64
+cd ~/my_rUBot_limo/Documentation/files/Docker_limo/Limo_ub_full
+```
 
 ### Step 1: Go to the folder containing `docker-compose.yaml`
 
+Ensure the `limo_entrypoint.sh` is executable
+```bash
+chmod +x limo_entrypoint.sh
+```
 
 ### Step 2: Verify PC IP inside docker-compose.yaml
 
@@ -11,10 +21,10 @@ Ensure these environment variables are set:
 
 ``` yaml
 environment:
-  - ROS_DOMAIN_ID=1
+  - ROS_DOMAIN_ID=6
   - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
   - ROS_AUTOMATIC_DISCOVERY_RANGE=OFF
-  - ROS_STATIC_PEERS=192.168.1.16   # ⚠️ Replace with your PC IP
+  - ROS_STATIC_PEERS=192.168.1.6   # ⚠️ Replace with your PC IP
   - CYCLONEDDS_URI=file:///config/cyclonedds_robot.xml
 ```
 
@@ -24,6 +34,7 @@ If you want GUI on the robot, use:
 ``` bash
 xhost +local:root
 ```
+> This has to be done on HOST!. Perhaps you have to install: sudo apt install x11-xserver-utils
 
 Then start the container:
 ``` bash
