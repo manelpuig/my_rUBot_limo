@@ -1,0 +1,190 @@
+<?xml version="1.0"?>
+<robot name="limo_mecanum" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:include filename="$(find limo_description)/urdf/limo_xacro.xacro"/>
+  <xacro:arg name="use_gz" default="true"/>
+
+  <xacro:property name="M_PI" value="3.141592653589793"/>
+  <xacro:property name="wheelbase" value="0.20"/>
+  <xacro:property name="track" value="0.13"/>
+  <xacro:property name="wheel_vertical_offset" value="-0.10"/>
+  <xacro:property name="wheel_length" value="0.045"/>
+  <xacro:property name="wheel_radius" value="0.045"/>
+
+  <link name="base_footprint"/>
+  <joint name="base_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0.15" rpy="0 0 0"/>
+  </joint>
+
+  <link name="base_link">
+    <inertial>
+      <origin xyz="0 0 -0.10" rpy="0 0 0"/>
+      <mass value="4.34"/>
+      <inertia ixx="0.040" ixy="0" ixz="0" iyy="0.025" iyz="0" izz="0.050"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 -0.15" rpy="0 0 ${M_PI/2}"/>
+      <geometry>
+        <mesh filename="package://limo_description/meshes/limo_base.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.10" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.30 0.20 0.12"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <xacro:limo_wheel parent_prefix="base_link" wheel_prefix="front_left" reflect="1">
+    <origin xyz="${wheelbase/2} ${track/2} ${wheel_vertical_offset}" rpy="0 0 0"/>
+  </xacro:limo_wheel>
+  <xacro:limo_wheel parent_prefix="base_link" wheel_prefix="front_right" reflect="-1">
+    <origin xyz="${wheelbase/2} ${-track/2} ${wheel_vertical_offset}" rpy="${M_PI} 0 0"/>
+  </xacro:limo_wheel>
+  <xacro:limo_wheel parent_prefix="base_link" wheel_prefix="rear_left" reflect="1">
+    <origin xyz="${-wheelbase/2} ${track/2} ${wheel_vertical_offset}" rpy="0 0 0"/>
+  </xacro:limo_wheel>
+  <xacro:limo_wheel parent_prefix="base_link" wheel_prefix="rear_right" reflect="-1">
+    <origin xyz="${-wheelbase/2} ${-track/2} ${wheel_vertical_offset}" rpy="${M_PI} 0 0"/>
+  </xacro:limo_wheel>
+
+  <xacro:limo_laser parent_prefix="base_link" frame_prefix="laser">
+    <origin xyz="0.103 0 -0.034" rpy="0 0 0"/>
+  </xacro:limo_laser>
+  <xacro:limo_depth_camera parent_prefix="base_link" frame_prefix="camera_color">
+    <origin xyz="0.084 0 0.03" rpy="0 0 0"/>
+  </xacro:limo_depth_camera>
+  <xacro:limo_imu parent_prefix="base_link" frame_prefix="imu">
+    <origin xyz="0 0 -0.10" rpy="0 0 0"/>
+  </xacro:limo_imu>
+
+  <!-- Gazebo Sim / Fortress is the default simulator on ROS 2 Humble. -->
+  <xacro:if value="$(arg use_gz)">
+    <gazebo>
+      <plugin filename="libignition-gazebo6-velocity-control-system.so"
+              name="ignition::gazebo::systems::VelocityControl">
+        <topic>/cmd_vel</topic>
+      </plugin>
+      <plugin filename="libignition-gazebo6-odometry-publisher-system.so"
+              name="ignition::gazebo::systems::OdometryPublisher">
+        <odom_frame>odom</odom_frame>
+        <robot_base_frame>base_footprint</robot_base_frame>
+        <odom_topic>/wheel/odom</odom_topic>
+        <tf_topic>/tf</tf_topic>
+        <odom_publish_frequency>50</odom_publish_frequency>
+      </plugin>
+    </gazebo>
+  </xacro:if>
+
+  <xacro:unless value="$(arg use_gz)">
+    <gazebo>
+      <plugin name="mecanum_controller" filename="libgazebo_ros_planar_move.so">
+        <command_topic>/cmd_vel</command_topic>
+        <odometry_topic>/wheel/odom</odometry_topic>
+        <odometry_frame>odom</odometry_frame>
+        <odometry_rate>50.0</odometry_rate>
+        <robot_base_frame>base_footprint</robot_base_frame>
+        <publish_odom>true</publish_odom>
+        <publish_odom_tf>true</publish_odom_tf>
+      </plugin>
+    </gazebo>
+  </xacro:unless>
+
+  <xacro:if value="$(arg use_gz)">
+    <gazebo reference="laser_link">
+      <sensor name="lidar" type="gpu_lidar">
+      <topic>/scan</topic>
+      <gz_frame_id>laser_link</gz_frame_id>
+      <always_on>true</always_on>
+      <update_rate>10</update_rate>
+      <visualize>true</visualize>
+      <lidar>
+        <scan>
+          <horizontal>
+            <samples>720</samples>
+            <resolution>1</resolution>
+            <min_angle>-${M_PI}</min_angle>
+            <max_angle>${M_PI}</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.12</min>
+          <max>12.0</max>
+          <resolution>0.01</resolution>
+        </range>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+      </lidar>
+      </sensor>
+    </gazebo>
+  </xacro:if>
+
+  <xacro:unless value="$(arg use_gz)">
+    <gazebo reference="laser_link">
+      <sensor name="lidar" type="ray">
+        <always_on>true</always_on>
+        <update_rate>10</update_rate>
+        <ray>
+          <scan><horizontal><samples>720</samples><resolution>1</resolution><min_angle>-${M_PI}</min_angle><max_angle>${M_PI}</max_angle></horizontal></scan>
+          <range><min>0.12</min><max>12.0</max><resolution>0.01</resolution></range>
+        </ray>
+        <plugin name="lidar_ros" filename="libgazebo_ros_ray_sensor.so">
+          <ros><remapping>~/out:=/scan</remapping></ros>
+          <output_type>sensor_msgs/LaserScan</output_type>
+          <frame_name>laser_link</frame_name>
+        </plugin>
+      </sensor>
+    </gazebo>
+  </xacro:unless>
+
+  <gazebo reference="camera_color_link">
+    <sensor name="color_camera" type="camera">
+      <topic>/camera/color</topic>
+      <gz_frame_id>camera_color_link</gz_frame_id>
+      <always_on>true</always_on>
+      <update_rate>15</update_rate>
+      <camera>
+        <horizontal_fov>1.047</horizontal_fov>
+        <image>
+          <width>640</width>
+          <height>480</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.10</near>
+          <far>20.0</far>
+        </clip>
+      </camera>
+      <xacro:unless value="$(arg use_gz)">
+        <plugin name="camera_ros" filename="libgazebo_ros_camera.so">
+          <ros>
+            <remapping>image_raw:=/camera/color/image_raw</remapping>
+            <remapping>camera_info:=/camera/color/camera_info</remapping>
+          </ros>
+          <camera_name>camera_color</camera_name>
+          <frame_name>camera_color_link</frame_name>
+        </plugin>
+      </xacro:unless>
+    </sensor>
+  </gazebo>
+
+  <gazebo reference="imu_link">
+    <sensor name="imu" type="imu">
+      <topic>/imu</topic>
+      <gz_frame_id>imu_link</gz_frame_id>
+      <always_on>true</always_on>
+      <update_rate>100</update_rate>
+      <xacro:unless value="$(arg use_gz)">
+        <plugin name="imu_ros" filename="libgazebo_ros_imu_sensor.so">
+          <ros><remapping>~/out:=/imu</remapping></ros>
+          <frame_name>imu_link</frame_name>
+        </plugin>
+      </xacro:unless>
+    </sensor>
+  </gazebo>
+</robot>

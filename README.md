@@ -10,11 +10,10 @@ Start with [Documentation/01_Limo_Setup.md](Documentation/01_Limo_Setup.md).
 ## Source layout
 
 - `src/Robot_drivers`: base, messages and sensor drivers.
-- `src/limo_bringup`: Foxy robot bringup and legacy Humble launch files.
-- `src/limo_description`: LIMO models and meshes.
+- `src/limo_bringup`: real and simulated launchers, worlds and RViz files.
+- `src/limo_description`: shared real, Gazebo Sim and optional Classic models.
 - `src/Navigation_Projects`: Cartographer, Nav2 and waypoint control.
 - `src/AI_Projects`: YOLO11 and other vision examples.
-- `src/Simulation`: the legacy Gazebo Classic Ackermann simulation.
 
 ## Clone
 ```bash

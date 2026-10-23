@@ -77,8 +77,9 @@ branca 2.x sense verificar abans la compatibilitat exacta del dispositiu.
 
 ### Simulació i aplicacions
 
-- `limo_gazebo_classic`: simulació Ackermann antiga per Gazebo Classic; no és
-  una dependència del bringup del robot real.
+- Gazebo Sim Mecanum és la simulació principal dins de `limo_description` i
+  `limo_bringup`. La simulació Ackermann Classic queda només com a compatibilitat
+  dins de `limo_bringup/worlds/classic`.
 - `limo_visions`: exemples o aplicacions de visió.
 - `limo_yolo`: YOLO11 amb sortides `vision_msgs`, JSON i imatge anotada.
 
