@@ -72,13 +72,13 @@ source /opt/ros/foxy/setup.bash
 cd ~/limo_refactor_ws
 
 rosdep install --ignore-src -r -y --rosdistro foxy --from-paths \
-  src/limo_ros2/limo_msgs \
-  src/limo_ros2/limo_base \
-  src/ydlidar_ros2_driver \
-  src/rf2o_laser_odometry \
-  src/OrbbecSDK_ROS2/orbbec_camera_msgs \
-  src/OrbbecSDK_ROS2/orbbec_camera \
-  src/OrbbecSDK_ROS2/orbbec_description
+  src/Robot_drivers/limo_msgs \
+  src/Robot_drivers/limo_base \
+  src/Robot_drivers/ydlidar_ros2_driver \
+  src/Robot_drivers/rf2o_laser_odometry \
+  src/Robot_drivers/OrbbecSDK_ROS2/orbbec_camera_msgs \
+  src/Robot_drivers/OrbbecSDK_ROS2/orbbec_camera \
+  src/Robot_drivers/OrbbecSDK_ROS2/orbbec_description
 ```
 
 The YDLidar driver needs the YDLidar SDK. Check if the working robot already
@@ -88,7 +88,7 @@ has it:
 ldconfig -p | grep -i ydlidar
 ```
 
-If it is missing, follow `src/YDLidar-SDK/README.md`. Do not replace a working
+If it is missing, follow `src/Robot_drivers/YDLidar-SDK/README.md`. Do not replace a working
 SDK installation without a reason.
 
 ### 2.4. Build only the robot bringup
@@ -263,7 +263,7 @@ source install/setup.bash
 ```
 
 If `ldconfig` cannot find `ydlidar_sdk`, install it by following
-`src/YDLidar-SDK/README.md` before running `colcon build`.
+`src/Robot_drivers/YDLidar-SDK/README.md` before running `colcon build`.
 
 This command builds the complete repository. If an optional package fails,
 save the first `colcon` error and fix its dependency. Do not remove the package

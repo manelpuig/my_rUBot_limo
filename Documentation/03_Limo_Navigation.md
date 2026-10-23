@@ -24,12 +24,13 @@ sudo apt update
 sudo apt install -y ros-humble-cartographer ros-humble-cartographer-ros
 ```
 
-Build the new package:
+Build the mapping and navigation packages:
 
 ```bash
 source /opt/ros/humble/setup.bash
 cd ~/limo_humble_ws
-colcon build --symlink-install --packages-select limo_cartographer
+colcon build --symlink-install --packages-select \
+  limo_cartographer limo_navigation2 limo_nav_control
 source install/setup.bash
 ```
 
@@ -99,7 +100,7 @@ This creates `limo_lab.yaml` and `limo_lab.pgm`.
 
 ## 6. Parameters to tune on the real robot
 
-Edit `src/limo_cartographer/config/limo_lds_2d.lua` only after recording the
+Edit `src/Navigation_Projects/limo_cartographer/config/limo_lds_2d.lua` only after recording the
 problem and the test conditions. Main parameters:
 
 - `TRAJECTORY_BUILDER_2D.min_range`
@@ -111,8 +112,57 @@ problem and the test conditions. Main parameters:
 The initial maximum range is `16.0 m`. It must be adjusted to the exact
 YDLidar model and the laboratory environment.
 
-## 7. Navigation status
+## 7. Prepare the saved map for Nav2
 
-This version prepares mapping with Cartographer. Nav2 parameters for the
-holonomic Mecanum base are not yet validated. Do not use the old Ackermann
-configuration for the LIMO Pro.
+Copy the map created in section 5 into the navigation package:
+
+```bash
+cp ~/limo_humble_ws/maps/limo_lab.yaml \
+  ~/limo_humble_ws/src/Navigation_Projects/limo_navigation2/map/limo_map.yaml
+cp ~/limo_humble_ws/maps/limo_lab.pgm \
+  ~/limo_humble_ws/src/Navigation_Projects/limo_navigation2/map/limo_map.pgm
+```
+
+Check that the `image:` line in `limo_map.yaml` is `limo_map.pgm`, then rebuild
+`limo_navigation2`. The map included in Git is only a small placeholder.
+
+## 8. Start Nav2 localization and navigation
+
+Keep the Foxy bringup running on the robot. On the Humble PC:
+
+```bash
+source /opt/ros/humble/setup.bash
+source ~/limo_humble_ws/install/setup.bash
+export ROS_DOMAIN_ID=10
+export ROS_LOCALHOST_ONLY=0
+
+ros2 launch limo_navigation2 navigation.launch.py
+```
+
+The initial configuration uses `base_link`, `/wheel/odom`, `/scan`, `/cmd_vel`
+and the AMCL omnidirectional motion model. DWB samples X, Y and angular velocity
+for the Mecanum base. Speeds and the footprint are deliberately conservative
+and must be checked on the real robot.
+
+Set the initial pose in RViz, then send a small nearby goal. Keep the emergency
+stop accessible during every first test.
+
+## 9. Run a waypoint mission
+
+Edit this file so all points are inside free map space:
+
+```text
+src/Navigation_Projects/limo_nav_control/config/waypoints_real.yaml
+```
+
+Then run:
+
+```bash
+ros2 launch limo_nav_control waypoint_mission.launch.py
+```
+
+The node sets the optional initial pose, waits for Nav2, follows the waypoint
+list, reports progress and cancels the mission after the configured timeout.
+
+The Nav2 parameters are an initial test configuration. Do not use the old
+Ackermann configuration for the Mecanum LIMO Pro.

@@ -1,0 +1,28 @@
+Panels:
+  - Class: rviz_common/Displays
+Visualization Manager:
+  Class: ""
+  Global Options:
+    Fixed Frame: map
+  Displays:
+    - Class: rviz_default_plugins/Map
+      Name: Map
+      Topic:
+        Value: /map
+    - Class: rviz_default_plugins/LaserScan
+      Name: Scan
+      Topic:
+        Value: /scan
+    - Class: rviz_default_plugins/TF
+      Name: TF
+    - Class: rviz_default_plugins/Path
+      Name: Global Plan
+      Topic:
+        Value: /plan
+    - Class: rviz_default_plugins/Path
+      Name: Local Plan
+      Topic:
+        Value: /local_plan
+Window Geometry:
+  Width: 1200
+  Height: 800

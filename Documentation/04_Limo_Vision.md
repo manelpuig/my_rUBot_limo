@@ -6,7 +6,8 @@ Humble control PC.
 The initial `limo_yolo` package performs object detection and publishes:
 
 - Annotated image: `/limo_yolo/annotated_image`
-- JSON detections: `/limo_yolo/detections`
+- Standard detections: `/limo_yolo/detections_2d`
+- JSON detections: `/limo_yolo/detections_json`
 
 ## 1. Check the camera topic
 
@@ -34,7 +35,8 @@ ros2 topic hz /camera/color/image_raw
 
 ```bash
 sudo apt update
-sudo apt install -y ros-humble-cv-bridge ros-humble-rqt-image-view python3-pip
+sudo apt install -y ros-humble-cv-bridge ros-humble-rqt-image-view \
+  ros-humble-vision-msgs python3-pip
 python3 -m pip install --user ultralytics
 ```
 
@@ -85,7 +87,8 @@ works.
 ## 4. Check the results
 
 ```bash
-ros2 topic echo /limo_yolo/detections
+ros2 topic echo /limo_yolo/detections_2d
+ros2 topic echo /limo_yolo/detections_json
 ros2 topic hz /limo_yolo/annotated_image
 ```
 
@@ -109,7 +112,7 @@ Each JSON detection contains:
 Default parameters are stored in:
 
 ```text
-src/limo_yolo/config/yolo11.yaml
+src/AI_Projects/limo_yolo/config/yolo11.yaml
 ```
 
 Important parameters:
@@ -120,6 +123,8 @@ Important parameters:
 - `device`
 - `annotated_topic`
 - `detections_topic`
+- `detections_json_topic`
+- `camera_info_topic`
 
 ## 6. First-test recommendations
 
@@ -127,7 +132,9 @@ Important parameters:
 - Test RGB reception before starting YOLO.
 - Use `yolo11n.pt` and CPU for the first test.
 - Measure image and detection frequency.
-- Do not run the legacy `yolov5_ros2` package at the same time.
+- Use `/limo_yolo/detections_2d` when another ROS node consumes detections.
+- Use `/limo_yolo/detections_json` for simple inspection and logging.
 
-The old `limo_visions` and `yolov5_ros2` packages remain in the repository for
-reference, but the new work should use `limo_yolo`.
+The old `yolov5_ros2` package was removed after its standard detection output
+was added to `limo_yolo`. The `limo_visions` examples remain separate under
+`src/AI_Projects`.

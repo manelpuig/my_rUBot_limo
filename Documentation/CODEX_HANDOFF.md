@@ -73,15 +73,14 @@ branca 2.x sense verificar abans la compatibilitat exacta del dispositiu.
 ### Odometria i localització opcionals
 
 - `rf2o_laser_odometry`: odometria a partir del LiDAR.
-- `csm`: paquet present al repositori però aparentment no integrat en el
-  bringup actual.
+- `csm`: eliminat durant la reorganització; no tenia cap consumidor actiu.
 
 ### Simulació i aplicacions
 
-- `limo_car`: simulació i recursos associats; no hauria de ser una dependència
-  obligatòria del bringup del robot real.
+- `limo_gazebo_classic`: simulació Ackermann antiga per Gazebo Classic; no és
+  una dependència del bringup del robot real.
 - `limo_visions`: exemples o aplicacions de visió.
-- `yolov5_ros2`: integració de YOLOv5 i pesos del model.
+- `limo_yolo`: YOLO11 amb sortides `vision_msgs`, JSON i imatge anotada.
 
 ## Resultat de la revisió inicial
 
@@ -101,8 +100,7 @@ reproduïble des d'una instal·lació neta.
   launch general en publica una altra amb una alçada diferent. Cal conservar
   una sola transformació, definida a la descripció del robot o en un únic
   publicador estàtic.
-- El launch de bringup consulta `limo_car` encara que no utilitza el resultat;
-  el bringup real no ha de dependre del paquet de simulació.
+- El bringup real no depèn del paquet de simulació.
 - L'argument `pub_tf` està definit però no s'utilitza de manera coherent.
 
 ### Base i cinemàtica
@@ -125,8 +123,7 @@ declarades completament als manifests:
 - `rf2o_laser_odometry`: `nav_msgs`.
 - `ydlidar_ros2_driver`: `rmw` i la dependència efectiva del YDLidar SDK.
 - `limo_bringup`: dependències d'execució dels paquets que inclou als launch.
-- `yolov5_ros2`: dependències Python com PyTorch i OpenCV no reproduïdes per
-  les instruccions generals d'instal·lació.
+- `limo_yolo`: Ultralytics s'instal·la al PC Humble seguint la guia de visió.
 
 ### Docker i DDS
 
@@ -149,7 +146,7 @@ configuració del robot.
 - La documentació barreja ROS 1 (`rosrun`, `rostopic`), Foxy, Humble,
   simulació i robot real.
 - El README principal no documenta un procediment complet de bringup real.
-- `src/limo_ros2/setup.sh` habilita SSH insegur, contrasenya de root coneguda i
+- `Documentation/files/Legacy_limo_ros2/setup.sh` habilita SSH insegur, contrasenya de root coneguda i
   `PermitEmptyPasswords`. No s'ha d'utilitzar al robot; cal eliminar-lo o
   traslladar-lo a una zona històrica clarament marcada.
 - `.gitignore` conté accidentalment línies d'un script de shell/heredoc.

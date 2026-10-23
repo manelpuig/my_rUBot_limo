@@ -34,6 +34,9 @@ venv/
 *.lib
 *.so
 *.so.*
+# The vendored Orbbec driver requires its prebuilt architecture libraries.
+!src/Robot_drivers/OrbbecSDK_ROS2/orbbec_camera/SDK/lib/**/*.so
+!src/Robot_drivers/OrbbecSDK_ROS2/orbbec_camera/SDK/lib/**/*.so.*
 *.dylib
 *.dll
 *.exe
@@ -64,6 +67,9 @@ compile_commands.json
 *.bmp
 *.tif
 *.tiff
+# Versioned maps moved during the source-tree reorganization.
+!src/limo_bringup/maps/*.pgm
+!src/Navigation_Projects/limo_navigation2/map/*.pgm
 
 ###############################################################################
 # Images / video / large media (optional: keep if you need)
