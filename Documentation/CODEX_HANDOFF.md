@@ -7,7 +7,7 @@ millora de `my_rUBot_limo` des d'un altre ordinador o una conversa nova de
 Codex.
 
 L'objectiu és deixar un repositori reproduïble, segur i funcional per al robot
-real, sense trencar el bringup que actualment funciona a la Jetson Nano. Els
+real, sense trencar el bringup que actualment funciona a la Jetson Orin Nano. Els
 canvis s'han de fer de manera incremental i validar primer al worktree de
 refactorització.
 
@@ -21,14 +21,15 @@ refactorització.
 - Missatge del commit de partida: `limo base rf2o`
 
 No s'han de fer canvis directament a `main`. Tota la feina d'aquesta revisió
-s'ha de fer a la branca i al worktree de refactorització. En el moment de crear
-aquest document, no s'havia publicat la branca nova al remot.
+s'ha de fer a la branca i al worktree de refactorització. La branca està
+publicada i segueix `origin/refactor/real-limo-bringup-humble` des del commit
+`0120543`.
 
 ## Plataforma real declarada pel propietari
 
-- Robot AgileX LIMO sense braç.
-- Ordinador embarcat: NVIDIA Jetson Nano.
-- Sistema operatiu declarat: Ubuntu 22.04 natiu.
+- Robot AgileX LIMO Pro sense braç.
+- Ordinador embarcat: NVIDIA Jetson Orin Nano Developer Kit, AArch64, 6 CPU.
+- Sistema operatiu confirmat: Ubuntu 20.04.6 LTS (Focal) natiu.
 - ROS 2 instal·lat a la Jetson: Foxy.
 - Base configurada amb cinemàtica Mecanum per defecte.
 - LiDAR: YDLidar.
@@ -37,13 +38,12 @@ aquest document, no s'havia publicat la branca nova al remot.
 - PCs de control: Ubuntu 22.04 amb ROS 2 Humble natiu.
 - Robot i PCs comparteixen la mateixa xarxa de laboratori.
 
-### Punt que cal confirmar abans de canviar el bringup
+### Arquitectura acordada per a la primera versió
 
-ROS 2 Foxy es va distribuir oficialment per Ubuntu 20.04. La combinació
-declarada Ubuntu 22.04 + Foxy pot correspondre a una compilació des de fonts,
-un contenidor o una identificació inexacta de la versió del sistema. Com que el
-bringup funciona, no s'ha de migrar ni substituir res fins que s'hagi capturat
-la configuració real.
+El bringup de baix nivell s'executarà nativament al robot amb Ubuntu 20.04 i
+ROS 2 Foxy. La Jetson només serà responsable de la base, l'IMU, el LiDAR i la
+càmera. La navegació, SLAM, RViz i les aplicacions s'executaran als PCs Humble.
+Docker queda explícitament fora de l'abast d'aquesta primera versió.
 
 També cal comprovar si la comunicació Foxy-Humble ja funciona de manera estable,
 quin RMW/DDS utilitza cada ordinador i si tots dos tenen el mateix
@@ -158,21 +158,28 @@ configuració del robot.
 
 ## Decisions de disseny acordades
 
-1. Preservar com a baseline el bringup Foxy que ja funciona a la Jetson.
+1. Preservar com a baseline el bringup Foxy que ja funciona a la Jetson Orin Nano.
 2. Separar clarament el rol del robot Foxy del rol dels PCs Humble.
 3. Mantenir Mecanum com a cinemàtica predeterminada, però configurable.
 4. No fer que la simulació, RF2O, Orbbec o les aplicacions de visió siguin
-   dependències obligatòries del bringup mínim de la base.
+   necessàries per arrencar només la base.
 5. Tenir una única autoritat per cada transformació TF.
 6. Fer canvis petits, revisables i amb un commit independent per bloc.
 7. No fusionar a `main` fins que les proves al robot real siguin satisfactòries.
 
-## Informació pendent de capturar a la Jetson
+## Informació confirmada i pendent de capturar a la Jetson
+
+Confirmat:
+
+- `/etc/os-release`: Ubuntu 20.04.6 LTS (Focal Fossa).
+- Device tree: NVIDIA Orin Nano Developer Kit.
+- `lscpu`: AArch64, sis CPU ARMv8.
+
+Pendent:
 
 Executar i conservar la sortida de:
 
 ```bash
-lsb_release -a
 uname -a
 head -n 1 /etc/nv_tegra_release 2>/dev/null
 printenv ROS_DISTRO
@@ -197,6 +204,18 @@ També cal registrar:
 
 Cada fase ha de quedar en un commit separat i no ha de començar fins que
 l'anterior s'hagi verificat.
+
+### Estat de la primera implementació al worktree nou
+
+S'han preparat, encara pendents de prova a Ubuntu/Foxy i al robot:
+
+- Launchers modulars Foxy per a base, YDLidar, DaBai i bringup complet.
+- Paràmetre corregit `use_mecanum`, amb Mecanum activat per defecte.
+- RF2O desactivat per defecte, `/rf2o/odom` separat i publicació TF desactivada.
+- Un únic publicador predeterminat per a `odom -> base_link` i
+  `base_link -> laser_link`.
+- Manifests bàsics corregits, guia de bringup natiu i script de preflight.
+- `.gitattributes` per conservar LF i `.gitignore` reparat.
 
 1. **Baseline funcional**
    - Capturar les dades pendents de la Jetson.

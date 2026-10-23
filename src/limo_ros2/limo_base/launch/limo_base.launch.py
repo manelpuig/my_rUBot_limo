@@ -32,10 +32,17 @@ def generate_launch_description():
         description="Publish odom TF",
     )
 
+    use_mecanum_arg = DeclareLaunchArgument(
+        "use_mecanum",
+        default_value="true",
+        description="Force the LIMO base to use Mecanum kinematics",
+    )
+
     port_name = LaunchConfiguration("port_name")
     odom_frame = LaunchConfiguration("odom_frame")
     base_frame = LaunchConfiguration("base_frame")
     pub_odom_tf = LaunchConfiguration("pub_odom_tf")
+    use_mecanum = LaunchConfiguration("use_mecanum")
 
     limo_base_node = Node(
         package="limo_base",
@@ -49,7 +56,7 @@ def generate_launch_description():
                 "odom_frame": odom_frame,
                 "base_frame": base_frame,
                 "pub_odom_tf": pub_odom_tf,
-                "use_mcnamu": True,
+                "use_mecanum": use_mecanum,
             }
         ],
         remappings=[
@@ -63,6 +70,7 @@ def generate_launch_description():
             odom_frame_arg,
             base_frame_arg,
             pub_odom_tf_arg,
+            use_mecanum_arg,
             limo_base_node,
         ]
     )

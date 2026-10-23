@@ -43,23 +43,24 @@ LimoDriver::LimoDriver(std::string node_name):rclcpp::Node(node_name),keep_runni
     this->declare_parameter("base_frame","base_link");
     this->declare_parameter("control_rate",50);
     this->declare_parameter("pub_odom_tf",false);
-    this->declare_parameter("use_mcnamu",false);
+    this->declare_parameter("use_mecanum",false);
     //获取参数   
     this->get_parameter_or<std::string>("port_name", port_name, "ttylimo");
     this->get_parameter_or<std::string>("odom_frame", odom_frame_, "odom");
     this->get_parameter_or<std::string>("base_frame", base_frame_, "base_link");
-    this->get_parameter_or<bool>("pub_odom_tf", pub_odom_tf_, "false");
-    this->get_parameter_or<bool>("use_mcnamu", use_mcnamu_, "false");
+    this->get_parameter_or<bool>("pub_odom_tf", pub_odom_tf_, false);
+    this->get_parameter_or<bool>("use_mecanum", use_mecanum_, false);
     
 
     std::cout << "Loading parameters: " << std::endl;
     std::cout << "- port name: " << port_name << std::endl;
     std::cout << "- odom frame name: " << odom_frame_ << std::endl;
     std::cout << "- base frame name: " << base_frame_ << std::endl;
-    std::cout << "- odom topic name: " << pub_odom_tf_ << std::endl;
+    std::cout << "- publish odom TF: " << pub_odom_tf_ << std::endl;
+    std::cout << "- force Mecanum mode: " << use_mecanum_ << std::endl;
 
     
-    if(use_mcnamu_) {
+    if(use_mecanum_) {
         motion_mode_ = MODE_MCNAMU;
     }
     tf_broadcaster_=std::make_shared<tf2_ros::TransformBroadcaster>(*this);
@@ -78,8 +79,10 @@ LimoDriver::LimoDriver(std::string node_name):rclcpp::Node(node_name),keep_runni
     // motion_cmd_sub_ = nh.subscribe<geometry_msgs::Twist>("/cmd_vel", 5, &LimoDriver::twistCmdCallback, this);
     
     // connect to the serial port
-    if (port_name.find("tty") != port_name.npos){ 
-        port_name = "/dev/" + port_name;
+    if (port_name.rfind("/dev/", 0) == 0 || port_name.find("tty") != port_name.npos){
+        if (port_name.rfind("/dev/", 0) != 0) {
+            port_name = "/dev/" + port_name;
+        }
         keep_running_=true;
         this->connect(port_name, B460800);
         this->enableCommandedMode();
@@ -259,7 +262,7 @@ void LimoDriver::parseFrame(const LimoFrame& frame) {
             double battervyoltage = ((frame.data[3] & 0xff) | (frame.data[2] << 8)) * 0.1;
             uint16_t error_code = ((frame.data[5] & 0xff) | (frame.data[4] << 8));
 
-            if (!use_mcnamu_) {
+            if (!use_mecanum_) {
                 motion_mode_ = frame.data[6];
             }
 

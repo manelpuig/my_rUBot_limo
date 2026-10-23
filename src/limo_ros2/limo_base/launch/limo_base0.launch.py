@@ -48,7 +48,7 @@ def generate_launch_description():
                 "odom_frame": odom_frame_arg,
                 "base_frame": base_link_frame_arg,
                 "pub_odom_tf": pub_odom_tf_arg_,
-                "use_mcnamu": True,
+                "use_mecanum": True,
             }
         ],
         remappings=remapping,

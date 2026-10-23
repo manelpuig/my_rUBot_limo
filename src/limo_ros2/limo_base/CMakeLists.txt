@@ -24,8 +24,8 @@ find_package(sensor_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(limo_msgs REQUIRED)
-find_package(tf2_geometry_msgs)
-find_package(turtlesim)
+find_package(tf2_geometry_msgs REQUIRED)
+find_package(turtlesim REQUIRED)
 
 include_directories(
   include
