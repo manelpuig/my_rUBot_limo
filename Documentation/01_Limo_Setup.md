@@ -21,6 +21,44 @@ refactor/real-limo-bringup-humble
 Do not remove or overwrite the Foxy workspace that already works on the robot.
 Test this branch in a new directory.
 
+### 1.1. Repository structure
+
+The packages are grouped by function. The extra directories do not change the
+ROS 2 package names; `colcon` finds packages recursively under `src`.
+
+```text
+src/
+|-- Robot_drivers/
+|   |-- limo_base/                 # LIMO base and IMU driver
+|   |-- limo_msgs/                 # LIMO messages
+|   |-- ydlidar_ros2_driver/       # YDLidar ROS 2 driver
+|   |-- YDLidar-SDK/               # Native YDLidar SDK source
+|   |-- rf2o_laser_odometry/       # Optional laser odometry
+|   `-- OrbbecSDK_ROS2/            # Orbbec camera packages
+|-- limo_bringup/                  # Real and simulated robot launchers
+|-- limo_description/              # Shared URDF/Xacro, meshes and RViz files
+|-- Navigation_Projects/
+|   |-- limo_cartographer/         # Mapping with Cartographer
+|   |-- limo_navigation2/          # Nav2 configuration and launchers
+|   `-- limo_nav_control/          # Navigation control examples
+`-- AI_Projects/
+    |-- limo_yolo/                 # YOLO11 ROS 2 package
+    `-- limo_visions/              # Vision examples
+```
+
+Use the packages as follows:
+
+| Group | LIMO Pro, Foxy | Control PC, Humble |
+|---|---:|---:|
+| Hardware drivers and real bringup | Build | Build if required for development |
+| Description and simulation bringup | Not required for normal use | Build |
+| Navigation projects | Do not build | Build |
+| AI and vision projects | Do not build | Build |
+
+The default simulator is Gazebo Sim (`ros_gz`). Gazebo Classic is kept only as
+an optional compatibility launcher. See
+[05_Limo_Simulation.md](05_Limo_Simulation.md).
+
 ## 2. LIMO Pro setup
 
 ### 2.1. Clone the branch into a separate workspace
@@ -227,8 +265,15 @@ sudo apt install -y \
   git \
   python3-colcon-common-extensions \
   python3-rosdep \
-  ros-humble-teleop-twist-keyboard
+  ros-humble-teleop-twist-keyboard \
+  ros-humble-ros-gz \
+  ros-humble-joint-state-publisher
 ```
+
+The complete workspace also contains navigation and vision packages. `rosdep`
+in section 4.3 installs their declared ROS dependencies. YOLO11 additionally
+needs the Python package documented in `04_Limo_Vision.md`. Gazebo Classic is
+optional; install it only if you intend to use the Classic launcher.
 
 Initialize `rosdep` only if needed:
 
@@ -274,6 +319,13 @@ In every new PC terminal, run:
 ```bash
 source /opt/ros/humble/setup.bash
 source ~/limo_humble_ws/install/setup.bash
+```
+
+Confirm that the main packages were discovered:
+
+```bash
+colcon list | grep -E \
+  'limo_(bringup|description|cartographer|navigation2|nav_control|yolo)'
 ```
 
 ## 5. Foxy-to-Humble communication
@@ -359,6 +411,13 @@ git pull --ff-only
 Build again after an update and source `install/setup.bash`.
 
 ## References
+
+Project guides:
+
+- [02_Limo_Bringup.md](02_Limo_Bringup.md): real and simulated bringup
+- [03_Limo_Navigation.md](03_Limo_Navigation.md): Cartographer and Nav2
+- [04_Limo_Vision.md](04_Limo_Vision.md): camera and YOLO11
+- [05_Limo_Simulation.md](05_Limo_Simulation.md): Gazebo Sim and Gazebo Classic
 
 - AgileX LIMO ROS 2: <https://github.com/agilexrobotics/limo_ros2>
 - LIMO Pro ROS 2 Foxy manual:
