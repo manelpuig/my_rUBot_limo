@@ -1,0 +1,23 @@
+[Unit]
+Description=LIMO Pro bringup (ROS 2 Foxy)
+Wants=network-online.target time-sync.target
+After=network-online.target time-sync.target
+
+[Service]
+Type=simple
+User=agilex
+Group=agilex
+WorkingDirectory=/home/agilex
+EnvironmentFile=-/etc/default/limo-bringup
+ExecStartPre=/usr/bin/test -r ${LIMO_WORKSPACE}/install/setup.bash
+ExecStart=/usr/local/bin/start_limo_bringup
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=15
+KillSignal=SIGINT
+KillMode=control-group
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

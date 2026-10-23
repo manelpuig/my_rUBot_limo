@@ -1,65 +1,118 @@
-# **2. LIMO Navigation**
+# 3. LIMO Pro mapping with Cartographer
 
-This tutorial is using a simulation, but the process would be the same for a real Limo
+Cartographer runs on the Ubuntu 22.04 ROS 2 Humble control PC. The LIMO Pro
+only runs the Foxy hardware bringup.
 
-References:
-- https://limo-agx.github.io
-- https://bitbucket.org/theconstructcore/limo_robot/src/main/
+This is an initial configuration that must be tuned with the real robot.
 
-## **2.1. GMapping**
+## 1. Data flow
 
-For navigation to be useful, the robot needs a map of the environment around it. It will use that map for high-level planning.
+```text
+LIMO Pro (Foxy)                 Control PC (Humble)
+/scan             -----------> Cartographer
+/wheel/odom       -----------> Cartographer
+odom -> base_link -----------> TF
+/cmd_vel          <----------- teleoperation or Nav2
+```
 
-### **Creating a Map**
+Cartographer publishes the map and the `map -> odom` transform.
 
-For navigation to be useful, the robot needs a map of the environment around it.
+## 2. Install Cartographer on the PC
 
-- Bringup the robot
-- Launch the gmapping_node to create that map:
-````shell
-roslaunch limo_navigation limo_gmapping.launch
-````
-- To monitor the mapping process, you can run RVIZ
-````shell
-roslaunch limo_viz view_navigation_gmapping.launch
-````
-- Now you need to drive the robot around the environment. 
-- Once your map looks complete, you will want to save it for future use
-````shell
-cd ~/rUBot_limo_ws/src/limo_sim/limo_navigation/maps
-rosrun map_server map_saver
-````
-- Once the robot has a map of the environment, it can navigate around it
-````shell
-roslaunch limo_navigation limo_navigation_amcl_diff.launch
-````
-> verify the created map file in "map_file” parameter
-> Close the slam node first
-> Maintain opened the view_navigation_gmapping.launch
+```bash
+sudo apt update
+sudo apt install -y ros-humble-cartographer ros-humble-cartographer-ros
+```
 
-## **2.2. RTABMap**
+Build the new package:
 
-We are going to use RTABMap to create a 3D map.
+```bash
+source /opt/ros/humble/setup.bash
+cd ~/limo_humble_ws
+colcon build --symlink-install --packages-select limo_cartographer
+source install/setup.bash
+```
 
-### **Creating a Map**
+## 3. Check robot data
 
-````shell
-roslaunch limo_navigation limo_rtabmap.launch
-````
-- To monitor the mapping process, you can run RVIZ
-````shell
-roslaunch limo_viz view_navigation_rtabmap.launch
-````
-- Now you need to drive the robot around the environment. 
-- Once your map looks complete, you will want to save it for future use
-````shell
-cd ~/rUBot_limo_ws/src/limo_sim/limo_navigation/maps
-rosrun map_server map_saver -f rtab_map
-````
-- Once the robot has a map of the environment, it can navigate around it
-````shell
-roslaunch limo_navigation limo_navigation_rtabmap_diff.launch
-````
-> verify the created map file in "map_file” parameter
-> Close the slam node first
-> Maintain opened the view_navigation_gmapping.launch
+Start the normal bringup on the LIMO Pro. On the PC:
+
+```bash
+export ROS_DOMAIN_ID=10
+export ROS_LOCALHOST_ONLY=0
+
+ros2 topic hz /scan
+ros2 topic hz /wheel/odom
+ros2 run tf2_ros tf2_echo odom base_link
+ros2 run tf2_ros tf2_echo base_link laser_link
+```
+
+Do not start Cartographer until all four checks work.
+
+## 4. Start Cartographer
+
+```bash
+source /opt/ros/humble/setup.bash
+source ~/limo_humble_ws/install/setup.bash
+export ROS_DOMAIN_ID=10
+export ROS_LOCALHOST_ONLY=0
+
+ros2 launch limo_cartographer cartographer.launch.py
+```
+
+The launcher uses:
+
+- `/scan`
+- `/wheel/odom`
+- `base_link`
+- `odom`
+- `map`
+- Real time (`use_sim_time:=false`)
+
+Start without RViz if needed:
+
+```bash
+ros2 launch limo_cartographer cartographer.launch.py use_rviz:=false
+```
+
+## 5. Create a map
+
+Drive slowly with keyboard teleoperation. Avoid fast rotations and repeated
+movement through people or moving objects.
+
+Check:
+
+```bash
+ros2 topic hz /map
+ros2 run tf2_ros tf2_echo map odom
+```
+
+Save the map:
+
+```bash
+mkdir -p ~/limo_humble_ws/maps
+ros2 run nav2_map_server map_saver_cli \
+  -f ~/limo_humble_ws/maps/limo_lab
+```
+
+This creates `limo_lab.yaml` and `limo_lab.pgm`.
+
+## 6. Parameters to tune on the real robot
+
+Edit `src/limo_cartographer/config/limo_lds_2d.lua` only after recording the
+problem and the test conditions. Main parameters:
+
+- `TRAJECTORY_BUILDER_2D.min_range`
+- `TRAJECTORY_BUILDER_2D.max_range`
+- `missing_data_ray_length`
+- `motion_filter.max_angle_radians`
+- `constraint_builder.min_score`
+
+The initial maximum range is `16.0 m`. It must be adjusted to the exact
+YDLidar model and the laboratory environment.
+
+## 7. Navigation status
+
+This version prepares mapping with Cartographer. Nav2 parameters for the
+holonomic Mecanum base are not yet validated. Do not use the old Ackermann
+configuration for the LIMO Pro.

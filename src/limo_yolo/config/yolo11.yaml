@@ -1,0 +1,8 @@
+yolo_detector:
+  ros__parameters:
+    image_topic: /camera/color/image_raw
+    model: yolo11n.pt
+    confidence: 0.35
+    device: cpu
+    annotated_topic: /limo_yolo/annotated_image
+    detections_topic: /limo_yolo/detections
