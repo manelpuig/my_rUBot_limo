@@ -102,9 +102,11 @@ private:
     std::string odom_topic_name_;
 
     bool pub_odom_tf_ = false;
+    bool pub_imu_tf_ = false;
     bool use_mecanum_ = false;
     double present_theta_,last_theta_,delta_theta_,real_theta_,rad;
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_publisher_;
+    rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr wheel_odom_publisher_;
     rclcpp::Publisher<limo_msgs::msg::LimoStatus>::SharedPtr status_publisher_;
 
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr motion_cmd_sub_;

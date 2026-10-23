@@ -2,7 +2,8 @@
 
 This package starts Nav2 localization and navigation on the Ubuntu 22.04 ROS 2
 Humble PC. It is configured for the real Mecanum LIMO Pro and consumes `/scan`
-and `/wheel/odom` from the Foxy robot.
+and the public `/odom` interface from the Foxy robot. The raw wheel estimate
+remains available on `/wheel/odom` for diagnostics.
 
 Replace the placeholder map before driving:
 

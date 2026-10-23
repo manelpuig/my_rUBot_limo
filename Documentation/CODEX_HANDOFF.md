@@ -95,7 +95,7 @@ reproduïble des d'una instal·lació neta.
 - `limo_bringup/launch/humble/limo_start.launch.py` arrenca conjuntament la
   base, RF2O, YDLidar i Orbbec. El nou disseny ha de permetre activar cada bloc
   per separat.
-- La base pot publicar `odom -> base_link` mentre RF2O també intenta publicar
+- La base pot publicar `odom -> base_footprint` mentre RF2O també intenta publicar
   aquesta transformació. Només hi ha d'haver una autoritat per cada TF.
 - El launch del YDLidar publica `base_link -> laser_link` amb una alçada i el
   launch general en publica una altra amb una alçada diferent. Cal conservar
@@ -210,7 +210,7 @@ S'han preparat, encara pendents de prova a Ubuntu/Foxy i al robot:
 - Launchers modulars Foxy per a base, YDLidar, DaBai i bringup complet.
 - Paràmetre corregit `use_mecanum`, amb Mecanum activat per defecte.
 - RF2O desactivat per defecte, `/rf2o/odom` separat i publicació TF desactivada.
-- Un únic publicador predeterminat per a `odom -> base_link` i
+- Un únic publicador predeterminat per a `odom -> base_footprint` i
   `base_link -> laser_link`.
 - Manifests bàsics corregits, guia de bringup natiu i script de preflight.
 - `.gitattributes` per conservar LF i `.gitignore` reparat.
@@ -236,7 +236,7 @@ S'han preparat, encara pendents de prova a Ubuntu/Foxy i al robot:
    - Verificar serial, topics, resolució, FPS i alineació de profunditat.
 6. **RF2O i localització**
    - Desactivar RF2O per defecte.
-   - Definir clarament qui publica `odom -> base_link` quan s'activa.
+   - Definir clarament qui publica `odom -> base_footprint` quan s'activa.
 7. **PC Humble i DDS**
    - Documentar el procediment de control i RViz des del PC.
    - Provar descobriment, QoS i compatibilitat dels missatges Foxy-Humble.

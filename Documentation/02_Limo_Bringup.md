@@ -33,8 +33,8 @@ Default configuration:
 | `use_camera` | `true` | Start Orbbec DaBai |
 | `enable_point_cloud` | `true` | Enable the camera point cloud |
 | `use_rf2o` | `false` | Start laser odometry |
-| `publish_odom_tf` | `true` | Publish `odom -> base_link` from the base |
-| `publish_camera_mount_tf` | `false` | Publish the measured camera mounting TF |
+| `publish_odom_tf` | `true` | Publish `odom -> base_footprint` from the base |
+| `camera_x` ... `camera_yaw` | Initial model values | Camera mounting pose used by the description |
 
 Example without the camera:
 
@@ -75,8 +75,10 @@ ros2 launch limo_bringup limo_robot_camera.launch.py
 
 The camera launcher accepts `camera_name`, `enable_point_cloud`,
 `enable_colored_point_cloud` and camera mounting TF arguments. The mounting TF
-is disabled by default because the real `base_link -> camera_link` pose still
-has to be measured.
+is disabled when this launcher runs alone because the real
+`base_link -> camera_link` pose still has to be measured. The complete bringup
+publishes that transform from `limo_description`, using its configurable
+`camera_x` through `camera_yaw` arguments.
 
 ## 3. Check the real robot
 
@@ -84,7 +86,8 @@ has to be measured.
 ros2 node list
 ros2 topic list
 ros2 topic echo /limo_status
-ros2 topic hz /wheel/odom
+ros2 topic hz /odom
+ros2 topic hz /wheel/odom  # raw wheel estimate
 ros2 topic hz /imu
 ros2 topic hz /scan
 ros2 topic list | grep camera
@@ -93,14 +96,15 @@ ros2 topic list | grep camera
 Check TF:
 
 ```bash
-ros2 run tf2_ros tf2_echo odom base_link
+ros2 run tf2_ros tf2_echo odom base_footprint
+ros2 run tf2_ros tf2_echo base_footprint base_link
 ros2 run tf2_ros tf2_echo base_link laser_link
 ```
 
 There must be only one publisher for each dynamic TF. By default, the base is
-the only source of `odom -> base_link`; the LiDAR launcher publishes
-`base_link -> laser_link`. Do not start another odometry node that publishes
-the same transform.
+the only source of `odom -> base_footprint`. `robot_state_publisher` publishes
+the fixed `base_footprint -> base_link` and sensor transforms. Do not start
+another node that publishes the same transforms.
 
 ## 4. Optional RF2O laser odometry
 
@@ -113,7 +117,7 @@ ros2 topic echo /rf2o/odom
 ```
 
 Do not use RF2O as the main odometry source until it has been compared with
-`/wheel/odom`.
+`/odom`. The unfiltered wheel estimate remains available on `/wheel/odom`.
 
 ## 5. Automatic startup
 
@@ -138,7 +142,7 @@ This is the default software bringup. It uses the shared Mecanum model from
 | Function | Topic |
 |---|---|
 | Velocity command | `/cmd_vel` |
-| Wheel odometry | `/wheel/odom` |
+| Public odometry | `/odom` |
 | LiDAR | `/scan` |
 | IMU | `/imu` |
 | RGB image | `/camera/color/image_raw` |
@@ -161,7 +165,7 @@ Check the simulated robot:
 
 ```bash
 ros2 topic hz /clock
-ros2 topic hz /wheel/odom
+ros2 topic hz /odom
 ros2 topic hz /scan
 ros2 topic hz /imu
 ros2 topic hz /camera/color/image_raw
@@ -208,9 +212,8 @@ different domain, for example:
 export ROS_DOMAIN_ID=20
 ```
 
-The real base normally publishes `odom -> base_link`. The simulator publishes
-`odom -> base_footprint`, followed by the fixed `base_footprint -> base_link`
-transform from the robot description. This difference is intentional.
+Both the real base and the simulator publish `odom -> base_footprint`. The
+robot description publishes the fixed `base_footprint -> base_link` transform.
 
 ## 9. Troubleshooting
 

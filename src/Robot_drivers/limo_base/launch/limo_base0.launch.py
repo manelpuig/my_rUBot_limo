@@ -17,7 +17,7 @@ def generate_launch_description():
         "odom_frame", default_value="odom", description="Odometry frame id"
     )
     base_link_frame_arg = DeclareLaunchArgument(
-        "base_frame", default_value="base_link", description="Base link frame id"
+        "base_frame", default_value="base_footprint", description="Base frame id"
     )
     odom_topic_arg = DeclareLaunchArgument(
         "odom_topic_name", default_value="odom", description="Odometry topic name"
@@ -29,12 +29,9 @@ def generate_launch_description():
 
     port_name_arg = LaunchConfiguration("port_name", default="ttyTHS0")
     odom_frame_arg = LaunchConfiguration("odom_frame", default="odom")
-    base_link_frame_arg = LaunchConfiguration("base_frame", default="base_link")
+    base_link_frame_arg = LaunchConfiguration("base_frame", default="base_footprint")
     pub_odom_tf_arg_ = LaunchConfiguration("pub_odom_tf", default="true")
 
-    remapping = [
-        ("odom", "/wheel/odom"),
-    ]
     limo_base_node = Node(
         package="limo_base",
         executable="limo_base",  # foxy executable='limo_base',
@@ -48,10 +45,10 @@ def generate_launch_description():
                 "odom_frame": odom_frame_arg,
                 "base_frame": base_link_frame_arg,
                 "pub_odom_tf": pub_odom_tf_arg_,
+                "pub_imu_tf": False,
                 "use_mecanum": True,
             }
         ],
-        remappings=remapping,
     )
 
     return LaunchDescription(

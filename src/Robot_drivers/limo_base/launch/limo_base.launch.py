@@ -1,6 +1,3 @@
-import launch
-import launch_ros
-
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
@@ -22,7 +19,7 @@ def generate_launch_description():
 
     base_frame_arg = DeclareLaunchArgument(
         "base_frame",
-        default_value="base_link",
+        default_value="base_footprint",
         description="Base link frame id",
     )
 
@@ -30,6 +27,12 @@ def generate_launch_description():
         "pub_odom_tf",
         default_value="true",
         description="Publish odom TF",
+    )
+
+    pub_imu_tf_arg = DeclareLaunchArgument(
+        "pub_imu_tf",
+        default_value="false",
+        description="Publish base to IMU TF from the driver",
     )
 
     use_mecanum_arg = DeclareLaunchArgument(
@@ -42,6 +45,7 @@ def generate_launch_description():
     odom_frame = LaunchConfiguration("odom_frame")
     base_frame = LaunchConfiguration("base_frame")
     pub_odom_tf = LaunchConfiguration("pub_odom_tf")
+    pub_imu_tf = LaunchConfiguration("pub_imu_tf")
     use_mecanum = LaunchConfiguration("use_mecanum")
 
     limo_base_node = Node(
@@ -56,11 +60,9 @@ def generate_launch_description():
                 "odom_frame": odom_frame,
                 "base_frame": base_frame,
                 "pub_odom_tf": pub_odom_tf,
+                "pub_imu_tf": pub_imu_tf,
                 "use_mecanum": use_mecanum,
             }
-        ],
-        remappings=[
-            ("odom", "/wheel/odom"),
         ],
     )
 
@@ -70,6 +72,7 @@ def generate_launch_description():
             odom_frame_arg,
             base_frame_arg,
             pub_odom_tf_arg,
+            pub_imu_tf_arg,
             use_mecanum_arg,
             limo_base_node,
         ]

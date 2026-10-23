@@ -109,6 +109,11 @@ rosdep update
 source /opt/ros/foxy/setup.bash
 cd ~/limo_refactor_ws
 
+sudo apt install -y \
+  ros-foxy-robot-state-publisher \
+  ros-foxy-joint-state-publisher \
+  ros-foxy-xacro
+
 rosdep install --ignore-src -r -y --rosdistro foxy --from-paths \
   src/Robot_drivers/limo_msgs \
   src/Robot_drivers/limo_base \
@@ -173,17 +178,20 @@ ros2 topic echo /limo_status
 Use separate terminals for these checks:
 
 ```bash
-ros2 topic hz /wheel/odom
+ros2 topic hz /odom
+ros2 topic hz /wheel/odom  # raw wheel estimate
 ros2 topic hz /imu
-ros2 run tf2_ros tf2_echo odom base_link
+ros2 run tf2_ros tf2_echo odom base_footprint
+ros2 run tf2_ros tf2_echo base_footprint base_link
 ```
 
 The test is correct when:
 
 - The serial port opens without errors.
 - `/limo_status` publishes data.
-- `/wheel/odom` and `/imu` update continuously.
-- Only one node publishes `odom -> base_link`.
+- `/odom`, `/wheel/odom` and `/imu` update continuously.
+- Only one node publishes `odom -> base_footprint`.
+- `robot_state_publisher` publishes the fixed `base_footprint -> base_link` TF.
 
 ### 3.2. Test the YDLidar only
 
@@ -227,8 +235,7 @@ ros2 launch limo_bringup limo_robot_bringup.launch.py \
   use_lidar:=true \
   use_camera:=true \
   use_rf2o:=false \
-  publish_odom_tf:=true \
-  publish_camera_mount_tf:=false
+  publish_odom_tf:=true
 ```
 
 These are the default values. After checking them, the short command is:
@@ -245,10 +252,11 @@ Quick checks:
 ```bash
 ros2 node list
 ros2 topic list
-ros2 topic hz /wheel/odom
+ros2 topic hz /odom
 ros2 topic hz /imu
 ros2 topic hz /scan
-ros2 run tf2_ros tf2_echo odom base_link
+ros2 run tf2_ros tf2_echo odom base_footprint
+ros2 run tf2_ros tf2_echo base_footprint base_link
 ros2 run tf2_ros tf2_echo base_link laser_link
 ```
 
@@ -349,7 +357,7 @@ Start the bringup on the robot. Then check from the PC:
 ros2 node list
 ros2 topic list
 ros2 topic echo /limo_status
-ros2 topic hz /wheel/odom
+ros2 topic hz /odom
 ros2 topic hz /scan
 ros2 topic info /cmd_vel --verbose
 ```
@@ -393,7 +401,7 @@ Use short movements and check that:
 - Forward and backward directions are correct.
 - Side movement works as expected for a Mecanum base.
 - Rotation direction is correct.
-- `/limo_status`, `/wheel/odom`, `/imu` and `/scan` keep publishing.
+- `/limo_status`, `/odom`, `/imu` and `/scan` keep publishing.
 
 Stop immediately if a wheel moves in the wrong direction, the robot does not
 stop, or serial communication errors appear.

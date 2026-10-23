@@ -62,7 +62,7 @@ export ROS_DOMAIN_ID=10
 
 ros2 node list
 ros2 topic echo /limo_status
-ros2 topic hz /wheel/odom
+ros2 topic hz /odom
 ros2 topic hz /scan
 ```
 

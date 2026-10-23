@@ -40,15 +40,17 @@ LimoDriver::LimoDriver(std::string node_name):rclcpp::Node(node_name),keep_runni
     //声明参数
     this->declare_parameter("port_name","ttylimo");
     this->declare_parameter("odom_frame","odom");
-    this->declare_parameter("base_frame","base_link");
+    this->declare_parameter("base_frame","base_footprint");
     this->declare_parameter("control_rate",50);
     this->declare_parameter("pub_odom_tf",false);
+    this->declare_parameter("pub_imu_tf",false);
     this->declare_parameter("use_mecanum",false);
     //获取参数   
     this->get_parameter_or<std::string>("port_name", port_name, "ttylimo");
     this->get_parameter_or<std::string>("odom_frame", odom_frame_, "odom");
-    this->get_parameter_or<std::string>("base_frame", base_frame_, "base_link");
+    this->get_parameter_or<std::string>("base_frame", base_frame_, "base_footprint");
     this->get_parameter_or<bool>("pub_odom_tf", pub_odom_tf_, false);
+    this->get_parameter_or<bool>("pub_imu_tf", pub_imu_tf_, false);
     this->get_parameter_or<bool>("use_mecanum", use_mecanum_, false);
     
 
@@ -57,6 +59,7 @@ LimoDriver::LimoDriver(std::string node_name):rclcpp::Node(node_name),keep_runni
     std::cout << "- odom frame name: " << odom_frame_ << std::endl;
     std::cout << "- base frame name: " << base_frame_ << std::endl;
     std::cout << "- publish odom TF: " << pub_odom_tf_ << std::endl;
+    std::cout << "- publish IMU TF: " << pub_imu_tf_ << std::endl;
     std::cout << "- force Mecanum mode: " << use_mecanum_ << std::endl;
 
     
@@ -66,12 +69,15 @@ LimoDriver::LimoDriver(std::string node_name):rclcpp::Node(node_name),keep_runni
     tf_broadcaster_=std::make_shared<tf2_ros::TransformBroadcaster>(*this);
     tf_static_broadcaster_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>(*this);
 
-    odom_publisher_=this->create_publisher<nav_msgs::msg::Odometry>("/odom",50);
-    status_publisher_ = this->create_publisher<limo_msgs::msg::LimoStatus>("/limo_status",50);
-    imu_publisher_ = this->create_publisher<sensor_msgs::msg::Imu>("/imu",10);
+    // Relative topic names allow launch remapping and ROS namespaces.  /odom is
+    // the public robot interface; wheel/odom keeps the raw encoder estimate.
+    odom_publisher_=this->create_publisher<nav_msgs::msg::Odometry>("odom",50);
+    wheel_odom_publisher_=this->create_publisher<nav_msgs::msg::Odometry>("wheel/odom",50);
+    status_publisher_ = this->create_publisher<limo_msgs::msg::LimoStatus>("limo_status",50);
+    imu_publisher_ = this->create_publisher<sensor_msgs::msg::Imu>("imu",10);
 
     motion_cmd_sub_= this->create_subscription<geometry_msgs::msg::Twist>(
-        "/cmd_vel",10,std::bind(&LimoDriver::twistCmdCallback,this,std::placeholders::_1));
+        "cmd_vel",10,std::bind(&LimoDriver::twistCmdCallback,this,std::placeholders::_1));
  
     // odom_publisher_ = nh.advertise<nav_msgs::Odometry>("/odom", 50, true);
     // status_publisher_ = nh.advertise<limo_base::LimoStatus>("/limo_status", 10, true);
@@ -534,7 +540,9 @@ void LimoDriver::publishIMUData(double stamp) {
     imu_tf.transform.rotation.y = 0.0;
     imu_tf.transform.rotation.z = 0.0;
     imu_tf.transform.rotation.w = 1.0;
-    tf_static_broadcaster_->sendTransform(imu_tf);
+    if (pub_imu_tf_) {
+        tf_static_broadcaster_->sendTransform(imu_tf);
+    }
 
 
 }
@@ -640,6 +648,7 @@ void LimoDriver::publishOdometry(double stamp, double linear_velocity,
     odom_msg.pose.covariance[35] = 1.0;
 
     odom_publisher_->publish(odom_msg);
+    wheel_odom_publisher_->publish(odom_msg);
 }
 
 void LimoDriver::publishLimoState(double stamp, uint8_t vehicle_state, uint8_t control_mode,

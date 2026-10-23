@@ -20,6 +20,18 @@ def generate_launch_description():
             "port_name": LaunchConfiguration("base_port"),
             "publish_odom_tf": LaunchConfiguration("publish_odom_tf"),
             "use_mecanum": LaunchConfiguration("use_mecanum"),
+            "laser_x": LaunchConfiguration("laser_x"),
+            "laser_y": LaunchConfiguration("laser_y"),
+            "laser_z": LaunchConfiguration("laser_z"),
+            "laser_roll": LaunchConfiguration("laser_roll"),
+            "laser_pitch": LaunchConfiguration("laser_pitch"),
+            "laser_yaw": LaunchConfiguration("laser_yaw"),
+            "camera_x": LaunchConfiguration("camera_x"),
+            "camera_y": LaunchConfiguration("camera_y"),
+            "camera_z": LaunchConfiguration("camera_z"),
+            "camera_roll": LaunchConfiguration("camera_roll"),
+            "camera_pitch": LaunchConfiguration("camera_pitch"),
+            "camera_yaw": LaunchConfiguration("camera_yaw"),
         }.items(),
     )
 
@@ -30,7 +42,13 @@ def generate_launch_description():
         condition=IfCondition(LaunchConfiguration("use_lidar")),
         launch_arguments={
             "params_file": LaunchConfiguration("lidar_params_file"),
+            "laser_x": LaunchConfiguration("laser_x"),
+            "laser_y": LaunchConfiguration("laser_y"),
             "laser_z": LaunchConfiguration("laser_z"),
+            "laser_roll": LaunchConfiguration("laser_roll"),
+            "laser_pitch": LaunchConfiguration("laser_pitch"),
+            "laser_yaw": LaunchConfiguration("laser_yaw"),
+            "publish_lidar_tf": "false",
         }.items(),
     )
 
@@ -41,7 +59,7 @@ def generate_launch_description():
         condition=IfCondition(LaunchConfiguration("use_camera")),
         launch_arguments={
             "enable_point_cloud": LaunchConfiguration("enable_point_cloud"),
-            "publish_camera_mount_tf": LaunchConfiguration("publish_camera_mount_tf"),
+            "publish_camera_mount_tf": "false",
         }.items(),
     )
 
@@ -72,13 +90,23 @@ def generate_launch_description():
             DeclareLaunchArgument("use_camera", default_value="true"),
             DeclareLaunchArgument("use_rf2o", default_value="false"),
             DeclareLaunchArgument("lidar_params_file", default_value=default_lidar_params),
+            DeclareLaunchArgument("laser_x", default_value="0.103"),
+            DeclareLaunchArgument("laser_y", default_value="0.0"),
             DeclareLaunchArgument(
                 "laser_z",
                 default_value="0.02",
                 description="Measure this LIMO Pro installation before release.",
             ),
+            DeclareLaunchArgument("laser_roll", default_value="0.0"),
+            DeclareLaunchArgument("laser_pitch", default_value="0.0"),
+            DeclareLaunchArgument("laser_yaw", default_value="0.0"),
             DeclareLaunchArgument("enable_point_cloud", default_value="true"),
-            DeclareLaunchArgument("publish_camera_mount_tf", default_value="false"),
+            DeclareLaunchArgument("camera_x", default_value="0.084"),
+            DeclareLaunchArgument("camera_y", default_value="0.0"),
+            DeclareLaunchArgument("camera_z", default_value="0.03"),
+            DeclareLaunchArgument("camera_roll", default_value="0.0"),
+            DeclareLaunchArgument("camera_pitch", default_value="0.0"),
+            DeclareLaunchArgument("camera_yaw", default_value="0.0"),
             base,
             lidar,
             camera,

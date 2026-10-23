@@ -41,7 +41,7 @@ ros2 launch limo_bringup limo_bringup_sw.launch.py \
 The main topics are:
 
 - `/cmd_vel`
-- `/wheel/odom`
+- `/odom`
 - `/scan`
 - `/imu`
 - `/camera/color/image_raw`
@@ -53,7 +53,7 @@ Check the simulation:
 
 ```bash
 ros2 topic hz /scan
-ros2 topic echo /wheel/odom --once
+ros2 topic echo /odom --once
 ros2 run teleop_twist_keyboard teleop_twist_keyboard
 ```
 

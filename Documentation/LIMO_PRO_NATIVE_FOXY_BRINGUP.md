@@ -15,8 +15,12 @@ xarxa amb Ubuntu 22.04 i ROS 2 Humble. Aquest flux s'ha de validar per separat.
 
 ## Principis del bringup
 
-- `limo_base` publica l'odometria de rodes a `/wheel/odom`.
-- `limo_base` és l'únic publicador predeterminat de `odom -> base_link`.
+- `limo_base` publica la interfície pública a `/odom` i conserva
+  `/wheel/odom` com a estimació crua de les rodes.
+- `limo_base` és l'únic publicador predeterminat de
+  `odom -> base_footprint`.
+- `robot_state_publisher` publica `base_footprint -> base_link` i els TF fixos
+  dels sensors.
 - El driver YDLidar és l'únic propietari de `base_link -> laser_link`.
 - RF2O està desactivat per defecte. Quan s'activa, publica `/rf2o/odom` però no TF.
 - El TF de muntatge de la càmera queda desactivat fins que es mesuri l'extrínseca.
@@ -77,6 +81,7 @@ Comprovar:
 ```bash
 ros2 topic list
 ros2 topic echo /limo_status
+ros2 topic hz /odom
 ros2 topic hz /wheel/odom
 ros2 topic hz /imu
 ```
@@ -136,7 +141,8 @@ Amb el bringup complet:
 
 ```bash
 ros2 run tf2_tools view_frames
-ros2 run tf2_ros tf2_echo odom base_link
+ros2 run tf2_ros tf2_echo odom base_footprint
+ros2 run tf2_ros tf2_echo base_footprint base_link
 ros2 run tf2_ros tf2_echo base_link laser_link
 ```
 
@@ -147,6 +153,6 @@ muntatge de la càmera fins que s'hagin mesurat els sis valors de l'extrínseca.
 
 Robot i PC han d'utilitzar el mateix `ROS_DOMAIN_ID` i una configuració DDS
 compatible. Primer s'ha de validar el descobriment amb topics petits
-(`/limo_status`, `/wheel/odom`, `/scan`) abans de transmetre imatges o núvols de
+(`/limo_status`, `/odom`, `/scan`) abans de transmetre imatges o núvols de
 punts. La interoperabilitat Foxy-Humble s'ha de provar a la xarxa real del
 laboratori; no s'assumeix com a validada només perquè els nodes arrenquin.

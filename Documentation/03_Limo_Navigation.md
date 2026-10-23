@@ -10,8 +10,9 @@ This is an initial configuration that must be tuned with the real robot.
 ```text
 LIMO Pro (Foxy)                 Control PC (Humble)
 /scan             -----------> Cartographer
-/wheel/odom       -----------> Cartographer
-odom -> base_link -----------> TF
+/odom                    ----> Cartographer
+odom -> base_footprint    ----> dynamic TF
+base_footprint -> base_link --> fixed TF
 /cmd_vel          <----------- teleoperation or Nav2
 ```
 
@@ -43,8 +44,8 @@ export ROS_DOMAIN_ID=10
 export ROS_LOCALHOST_ONLY=0
 
 ros2 topic hz /scan
-ros2 topic hz /wheel/odom
-ros2 run tf2_ros tf2_echo odom base_link
+ros2 topic hz /odom
+ros2 run tf2_ros tf2_echo odom base_footprint
 ros2 run tf2_ros tf2_echo base_link laser_link
 ```
 
@@ -64,8 +65,8 @@ ros2 launch limo_cartographer cartographer.launch.py
 The launcher uses:
 
 - `/scan`
-- `/wheel/odom`
-- `base_link`
+- `/odom`
+- `base_footprint`
 - `odom`
 - `map`
 - Real time (`use_sim_time:=false`)
@@ -139,7 +140,7 @@ export ROS_LOCALHOST_ONLY=0
 ros2 launch limo_navigation2 navigation.launch.py
 ```
 
-The initial configuration uses `base_link`, `/wheel/odom`, `/scan`, `/cmd_vel`
+The initial configuration uses `base_footprint`, `/odom`, `/scan`, `/cmd_vel`
 and the AMCL omnidirectional motion model. DWB samples X, Y and angular velocity
 for the Mecanum base. Speeds and the footprint are deliberately conservative
 and must be checked on the real robot.

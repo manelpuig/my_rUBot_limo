@@ -29,16 +29,16 @@ ekf_filter_node:
 #         from robot_localization! However, that instance should *not* fuse the global data.
         # map_frame: map              # Defaults to "map" if unspecified
         odom_frame: odom            # Defaults to "odom" if unspecified
-        base_link_frame: base_link  # Defaults to "base_link" ifunspecified
+        base_link_frame: base_footprint  # Robot planar base frame
         world_frame: odom           # Defaults to the value ofodom_frame if unspecified
 
-        odom0: /laser/odom
+        odom0: /wheel/odom
         odom0_config: [true,  true,  true,
                        false, false, false,
                        false, false, false,
                        false, false, true,
                        false, false, false]
-        # odom1: /wheel/odom
+        # Add another independent odometry source here only after validation.
         # odom1_config: [true,  true,  true,
         #                false, false, false,
         #                false, false, false,

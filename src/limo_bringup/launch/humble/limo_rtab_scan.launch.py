@@ -47,7 +47,7 @@ def generate_launch_description():
     localization = LaunchConfiguration('localization')
 
     parameters={
-          'frame_id':'base_link',
+          'frame_id':'base_footprint',
           'use_sim_time':use_sim_time,
           'subscribe_rgbd':False,
           'subscribe_depth':False,
@@ -69,7 +69,7 @@ def generate_launch_description():
     remappings=[
           ('imu','/imu'),
           ('scan','/scan'),
-          ('odom','/wheel/odom'),
+          ('odom','/odom'),
           ('rgb/image', '/camera/color/image_raw'),
           ('rgb/camera_info', '/camera/color/camera_info'),
           ('depth/image', '/camera/depth/image_raw'),

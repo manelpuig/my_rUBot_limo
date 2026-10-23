@@ -43,7 +43,7 @@ def generate_launch_description():
                     "-configuration_basename",
                     configuration_basename,
                 ],
-                remappings=[("scan", "/scan"), ("odom", "/wheel/odom")],
+                remappings=[("scan", "/scan"), ("odom", "/odom")],
             ),
             Node(
                 package="cartographer_ros",
