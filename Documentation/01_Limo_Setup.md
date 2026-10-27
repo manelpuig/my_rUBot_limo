@@ -90,9 +90,12 @@ The check should find:
 - `ROS_DISTRO=foxy`
 - Base port `/dev/ttyTHS0`
 - LiDAR link `/dev/ydlidar`
-- Orbbec USB device
+- Orbbec USB device, when the camera is connected
 
-Do not continue if a device is missing. First check its port and permissions.
+If the Orbbec camera is intentionally disconnected, its warning is expected;
+continue with the base and LiDAR checks, but do not run the camera launch.
+Do not continue if the base port or LiDAR link is missing. First check its
+port and permissions.
 
 ### 2.3. Install dependencies
 
@@ -102,7 +105,42 @@ Initialize `rosdep` only if it has not been initialized before:
 sudo rosdep init
 ```
 
-If it reports that `rosdep` is already initialized, continue with:
+If it reports that `rosdep` is already initialized, do not remove its sources
+file.
+
+On Ubuntu 20.04, Foxy is end-of-life. If the configured ROS mirror returns
+404s or an expired ROS signing-key error, repair the APT source before
+installing dependencies. Use the official ROS package source instead of
+disabling APT signature checks. For the Jetson setup described above, the
+following replaces the old Tsinghua ROS mirror and enables the official ROS 2
+package source:
+
+```bash
+sudo mv /etc/apt/sources.list.d/ros-fish.list \
+  /etc/apt/sources.list.d/ros-fish.list.disabled
+
+curl -fL -o /tmp/ros-apt-source_1.3.0.focal_all.deb \
+  https://github.com/ros-infrastructure/ros-apt-source/releases/download/1.3.0/ros-apt-source_1.3.0.focal_all.deb
+echo '33a491f72e4e25491f8511c173526bb20ce84ff9faf596158f178f4900da5df1  /tmp/ros-apt-source_1.3.0.focal_all.deb' \
+  | sha256sum -c -
+sudo dpkg -i /tmp/ros-apt-source_1.3.0.focal_all.deb
+
+sudo tee /etc/apt/sources.list.d/ros2-focal.sources >/dev/null <<'EOF'
+Types: deb
+URIs: http://packages.ros.org/ros2/ubuntu
+Suites: focal
+Components: main
+Signed-By: /usr/share/keyrings/ros-archive-keyring.gpg
+EOF
+
+sudo apt update
+```
+
+APT may still report a separate expired Husarnet key; do not disable signature
+verification. Confirm the ROS 2 source has a candidate for Foxy packages with
+`apt-cache policy`, followed by the package name.
+
+Continue with:
 
 ```bash
 rosdep update
@@ -124,17 +162,74 @@ rosdep install --ignore-src -r -y --rosdistro foxy --from-paths \
   src/Robot_drivers/OrbbecSDK_ROS2/orbbec_description
 ```
 
-The YDLidar driver needs the YDLidar SDK. Check if the working robot already
-has it:
+If `rosdep install` reports that `tf_transformations` cannot be resolved,
+install its Foxy package and Python dependency:
 
 ```bash
-ldconfig -p | grep -i ydlidar
+sudo apt install -y ros-foxy-tf-transformations
+python3 -m pip install --user transforms3d
+source /opt/ros/foxy/setup.bash
+python3 -c 'import tf_transformations; print("tf_transformations OK")'
 ```
 
-If it is missing, follow `src/Robot_drivers/YDLidar-SDK/README.md`. Do not replace a working
-SDK installation without a reason.
+The `cmake_modules` key reported for `rf2o_laser_odometry` is stale in this
+branch: its CMake configuration uses `eigen3_cmake_module`. The warning does
+not prevent building RF2O.
 
-### 2.4. Build only the robot bringup
+The YDLidar driver needs the native YDLidar SDK. Build and install the copy
+included in this workspace:
+
+```bash
+cd ~/limo_refactor_ws/src/Robot_drivers/YDLidar-SDK
+mkdir -p build
+cd build
+cmake ..
+make -j2
+sudo make install
+sudo ldconfig
+```
+
+This SDK build produces a static library, so `ldconfig -p | grep -i ydlidar`
+is not a reliable installation check. Do not replace another working SDK
+installation without a reason.
+
+### 2.4. Foxy compatibility adjustments
+
+The branch's YDLidar driver uses `rclcpp::Node::declare_parameter()` calls
+without default values, which do not compile on Foxy. In
+`src/Robot_drivers/ydlidar_ros2_driver/src/ydlidar_ros2_driver_node.cpp`,
+pass the existing initialized value as the second argument to every
+`declare_parameter()` call. For example:
+
+```cpp
+node->declare_parameter<std::string>("port", str_optvalue);
+```
+
+Use the existing `str_optvalue`, `frame_id`, `optval`, `b_optvalue`,
+`f_optvalue`, or `invalid_range_is_inf` variable matching each parameter.
+Keep their existing initial values and the YAML configuration unchanged.
+
+Foxy provides `tf2_geometry_msgs/tf2_geometry_msgs.h`, whereas newer ROS 2
+releases provide the `.hpp` name. In
+`src/Robot_drivers/limo_base/include/limo_base/limo_driver.h` and
+`src/Robot_drivers/rf2o_laser_odometry/include/rf2o_laser_odometry/CLaserOdometry2DNode.hpp`,
+select the available header with:
+
+```cpp
+#if __has_include(<tf2_geometry_msgs/tf2_geometry_msgs.hpp>)
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#else
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#endif
+```
+
+These are source changes for Foxy compatibility; a fresh clone of the
+upstream branch does not contain them unless they have been committed upstream.
+
+### 2.5. Build the robot bringup
+
+When the Orbbec SDK and its native dependencies are ready, build the complete
+robot bringup:
 
 ```bash
 source /opt/ros/foxy/setup.bash
@@ -142,6 +237,35 @@ cd ~/limo_refactor_ws
 colcon build --symlink-install --packages-up-to limo_bringup
 source install/setup.bash
 ```
+
+For base and LiDAR work while the Orbbec camera is disconnected, the camera
+wrapper can be left out of the build:
+
+```bash
+source /opt/ros/foxy/setup.bash
+cd ~/limo_refactor_ws
+colcon build --symlink-install --packages-up-to limo_bringup \
+  --packages-skip orbbec_camera
+source install/setup.bash
+```
+
+This does not build the `orbbec_camera` package, so camera bringup is
+unavailable in this installation. A disconnected USB camera does not itself
+cause a compile failure; if the full build reports a missing or invalid
+Orbbec SDK library, resolve the SDK library and its dependencies before
+building the camera package. In this branch, the ARM64 SDK may contain
+`libOrbbecSDK.so.1.10` as a text file rather than a symbolic link. If the
+linker reports `cannot find -lOrbbecSDK` and `libOrbbecSDK.so` is absent, from
+the SDK's `lib/arm64` directory create the linker name:
+
+```bash
+cd ~/limo_refactor_ws/src/Robot_drivers/OrbbecSDK_ROS2/orbbec_camera/SDK/lib/arm64
+ln -s libOrbbecSDK.so.1.10.22 libOrbbecSDK.so
+```
+
+This only provides the linker name; it does not supply missing SDK
+dependencies. Check `ldd libOrbbecSDK.so.1.10.22` and obtain any missing
+Orbbec/vendor libraries before attempting the camera build.
 
 This builds the bringup and its workspace dependencies. It does not build the
 simulation, navigation, YOLO or vision exercises.
@@ -211,6 +335,8 @@ Measure the real LiDAR position before using this TF as a final value.
 
 ### 3.3. Test the DaBai camera only
 
+Only do this after building `orbbec_camera` and connecting the camera.
+
 ```bash
 ros2 launch limo_bringup limo_robot_camera.launch.py
 ```
@@ -226,7 +352,7 @@ position and orientation are measured.
 
 ### 3.4. Start the complete bringup
 
-After all three separate tests work:
+After all three separate tests work and the Orbbec package has been built:
 
 ```bash
 ros2 launch limo_bringup limo_robot_bringup.launch.py \
@@ -246,6 +372,13 @@ ros2 launch limo_bringup limo_robot_bringup.launch.py
 
 RF2O is disabled for the first tests. This avoids a second odometry and TF
 source.
+
+If the camera is disconnected and the workspace was built with
+`--packages-skip orbbec_camera`, keep camera bringup disabled:
+
+```bash
+ros2 launch limo_bringup limo_robot_bringup.launch.py use_camera:=false
+```
 
 Quick checks:
 
